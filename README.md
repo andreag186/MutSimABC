@@ -32,14 +32,14 @@ This repository accompanies the paper:
 ## Overview
 
 The rate and distribution of mutations accumulated in long-lived trees is governed by the structure and developmental dynamics of meristematic cells. Understanding and quantifying somatic mutation rates is essential for understanding plant evolution, optimizing breeding programs in forestry and agriculture, and managing genetic resources in conservation.
-However, existing WGS methods struggled distinguishing true somatic mutations from sequencing errors and alignment artifacts. An alternative *Phylogenomic method* introduced by [Orr et al. 2020](https://doi.org/10.1098/rspb.2019.2364)) aimed to estimate mutation rates by assuming mutations follow tree topology in order to reduce errors and presevere only variants with 'true biological signal'. However, this assumption is violated when meristem dynamics create patterns independent of branching structure. We introduce MutSimABC as an alternative prototype framework which addreses limitations of existing methods. 
+However, existing WGS methods struggled distinguishing true somatic mutations from sequencing errors and alignment artifacts. An alternative *Phylogenomic method* introduced by [Orr et al. 2020](https://doi.org/10.1098/rspb.2019.2364) aimed to estimate mutation rates by assuming mutations follow tree topology in order to reduce errors and presevere only variants with 'true biological signal'. However, this assumption is violated when meristem dynamics create patterns independent of branching structure. We introduce MutSimABC as an alternative prototype framework which addreses limitations of existing methods. 
 
 **MutSimABC** addresses these limitations by:
 1. **Simulating** mutation accumulation under mechanistic models of meristem elongation and branching (Tomimoto & Satake 2023)
 2. **Inferring** mutation rates and developmental meristem parameters using likelihood-free ABC-Reject inference
 3. **Validating** against synthetic data with known ground truth across diverse tree architectures
 
-The framework extends the simulation model of [Tomimoto & Satake (2023)](https://doi.org/10.1016/j.jtbi.2023.111465) to handle arbitrary tree topologies and integrates it into a Bayesian inference pipeline.
+The framework extends the simulation model of [Tomimoto & Satake (2023)](https://doi.org/10.1016/j.jtbi.2023.111465) to handle arbitrary tree topologies and integrates it into a Approximate Bayesian Computation (ABC)- Reject/Accept inference pipeline.
 
 ## Installation
 
@@ -59,4 +59,27 @@ cd MutSimABC
 pip install -r requirements.txt
 ```
 
+### Verify Installation
+```bash
+python -c "import numpy, scipy, pandas, arviz; print('MutSimABC Dependencies Installed Succesfully')"
+```
+
+## Quick Start
+
+### Example 1: Run ABC-Reject inference on E. melliodora pre-DNG data
+```bash
+python abc_non_dng.py
+```
+This will:
+
+Sample 5,000 parameter sets from prior distributions
+-Run simulations for each parameter set using the E. melliodora tree topology
+-Accept parameter sets where simulated mutation distribution is within ε=20 of observed distribution of mutations prior to topological filtering 
+-Save accepted samples to results/accepted_samples_*.csv
+
+### Example 2: Run ABC inference on E. melliodora post-DNG (topologically filtered) data
+```bash
+python abc_phylo.py
+```
+Similar to above but uses the 90 mutations that remained after topological filtering.
 
