@@ -930,7 +930,7 @@ import sys
 import ast  # For safer evaluation of stringified lists
 
 # Load LHS 100 samples
-validation_samples_file = "abc_validation_samples.csv"  # Ensure the path is correct
+validation_samples_file = "abc_validation_samples_combined.csv"  # 200 validation samples in MutSimABC directory
 df_validation = pd.read_csv(validation_samples_file)
 
 # Parse unique mutations from CSV
