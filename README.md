@@ -99,3 +99,19 @@ result_valid/accepted_samples_sample1_epsilon20_<timestamp>.csv
 
 To validate a different sample, change the task ID argument (e.g., python abc_validation.py 42 for sample 42- there are 200 samples total (index starting at 0).
 
+## Repository Structure
+```
+MutSimABC/
+├── README.md                      # This file
+├── requirements.txt               # Python dependencies
+│
+├── abc_non_dng.py                # ABC inference for pre-DNG E. melliodora data
+├── abc_phylo.py                  # ABC inference for post-DNG E. melliodora data
+├── abc_validation.py             # Validation framework with known ground truth
+│
+├── abc_validation_samples_combined.csv    # Pre-generated validation samples (169 samples)
+│
+├── results/                      # Output directory for pre-DNG accepted samples
+├── result_phylo/                 # Output directory for post-DNG accepted samples
+└── result_valid/                 # Output directory for validation accepted samples
+```
