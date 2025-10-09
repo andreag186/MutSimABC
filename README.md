@@ -190,7 +190,7 @@ tree_topologies_dict = {
     }
 }
 ```
-*See Defining Custom Tree Topologies for detailed nomenclature rules.*
+*See [Defining Custom Tree Topologies](#defining-custom-tree-topologies) for detailed nomenclature rules.*
 
 #### Step 2: Set Your Tree in Simulation
 In `MODIFY SECTION 2`, change the tree name:
