@@ -71,10 +71,10 @@ python abc_non_dng.py
 ```
 This will:
 
-Sample 5,000 parameter sets from prior distributions
--Run simulations for each parameter set using the E. melliodora tree topology
--Accept parameter sets where simulated mutation distribution is within ε=20 of observed distribution of mutations prior to topological filtering 
--Save accepted samples to results/accepted_samples_*.csv
+- Sample 5,000 parameter sets from prior distributions
+- Run simulations for each parameter set using the E. melliodora tree topology
+- Accept parameter sets where simulated mutation distribution is within ε=20 of observed distribution of mutations prior to topological filtering 
+- Save accepted samples to results/accepted_samples_*.csv
 
 ### Example 2: Run ABC inference on E. melliodora post-DNG (topologically filtered) data
 ```bash
@@ -82,20 +82,20 @@ python abc_phylo.py
 ```
 Similar to above but uses the 90 mutations that remained after topological filtering.
 
-### Example 3: Validate ABC framework with known ground truth
+### Example 3: Validate ABC framework with known simulated 'observed data' (*synthetic sample*)
 ```bash
 # To validate synthetic sample 1
 python abc_validation.py 1
 ```
 This will:
 
--Run ABC-Reject validation for sample 1 from abc_validation_samples.csv
--Sample parameters (StD, biasVar, input_mut) from prior distributions
--Simulate mutation distributions using the tree topology defined for that sample
--Compare simulated and observed mutation distributions, accepting parameter sets where the Euclidean distance < ε = 20
--Continue sampling (up to ~5,000 trials) until 100 accepted samples are obtained
--Save results to:
+- Run ABC-Reject validation for sample 1 from abc_validation_samples.csv
+- Sample parameters (StD, biasVar, input_mut) from prior distributions
+- Simulate mutation distributions using the tree topology defined for that sample
+- Compare simulated and observed mutation distributions, accepting parameter sets where the Euclidean distance < ε = 20
+- Continue sampling (up to ~5,000 trials) until 100 accepted samples are obtained
+- Save results to:
 result_valid/accepted_samples_sample1_epsilon20_<timestamp>.csv
 
-To validate a different sample, change the task ID argument (e.g., python abc_validation.py 42 for sample 42- there are 200 samples total(index starting at 0)).
+To validate a different sample, change the task ID argument (e.g., python abc_validation.py 42 for sample 42- there are 200 samples total (index starting at 0).
 
