@@ -246,3 +246,76 @@ print(f"Coverage: μ={results_df['mu_in_hpd'].mean():.1%}, "
       f"StD={results_df['StD_in_hpd'].mean():.1%}, "
       f"σ={results_df['biasVar_in_hpd'].mean():.1%}")
 ```
+The expected coverage across samples should be approximately 95% for μ, StD and σ . A more in-depth statistical analysis can be conducted via `results_df` & `validation_results`.
+
+## Understanding the Code
+
+### Core Simulation Functions (from Tomimoto & Satake 2023)
+
+These functions simulate meristem dynamics and mutation accumulation:
+
+1. `mutInStemCells(num_stem, t, mu_0, Genom, st_d)`
+  - Simulates elongation in the main stem before first branch split
+  - Parameters: 5 stem cells, time t, mutation rate, genome size, StD parameter
+  - Returns: mutation history of stem cells
+
+2. `mutInBrStemCells(num_stem, stemCells, t, mu_0, Genom, st_d)`
+  - Simulates elongation along a branch
+  - Takes initial stem cells from parent meristem
+  - Returns: mutation history along branch
+
+3. `sample_mutations(stem_cells, num_stem, num_div, mu_0, Genom, bias_d)`
+  - Simulates branching event with spatial bias (`bias_d`)
+  - Uses wrapped normal distribution to model cell sampling
+  - Returns: stem cells for new axillary meristem
+
+4. `simulate_somatic_mutations(tree_dict, NumStem, NumTime, mu_0, GenSize, StD, NumDiv, nDiv, biasVar)`
+  - Main simulation orchestrator
+  - Builds mutation matrix across entire tree
+  - Returns: binary matrix of mutations × branches
+
+### Tree Topology Handling 
+
+`create_tree_list_and_dict(tree_topology)`
+- Parses tree topology dictionary
+- Extracts branch ages and connectivity
+- Returns: processed tree structure for simulation
+
+`tree_topologies_dict`
+- Dictionary containing predefined tree architectures
+- Keys: tree codes (e.g., "bS4", "ubL8", "test")
+- Values: nested dictionaries with branch specifications (age/num left or right)
+
+### ABC Framework Functions
+1. `sample_prior()`
+  - Samples parameters from uniform prior distributions
+  - Returns: (StD, biasVar, input_mut)
+
+2. `run_simulation(StD, biasVar, input_mut)`
+  - Runs full simulation pipeline with sampled parameters
+  - Calls `simulate_somatic_mutations()` → `mut_dist_func()` → `gen_matrices()` → `calc_variants()`
+  - Returns: unique mutations per branch, estimated mutation rate
+
+3. `calculate_distance(unique_mutations)`
+  - Computes Euclidean distance between simulated and observed distributions
+  - Returns: scalar distance value
+
+4. `abc_rejection(num_samples, epsilon, job_id, batch_id)`
+  - Main ABC loop
+  - Samples → simulates → compares → accepts/rejects
+  - Saves accepted samples every 100 iterations
+
+### Mutation Analysis Functions
+1. `mut_dist_func(resultList_2)`
+  - Analyzes mutation patterns across branches
+  - Calculates shared, unique, and total mutations
+  - Returns: mutation distribution statistics
+
+2. `gen_matrices(tree_dict, unique_mutations, shared_mutations, mutations_counts)`
+  - Constructs genetic and physical distance matrices
+  - Returns: pairwise distance matrices
+
+3. `calc_variants(genetic_matrix, physical_matrix, tree_dict, GenSize)`
+  - Performs linear regression of genetic vs. physical distance
+  - Estimates mutation rate per site per year
+  - Returns: variant count, regression equation, mutation rate
