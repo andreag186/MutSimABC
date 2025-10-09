@@ -85,7 +85,7 @@ Similar to above but uses the 90 mutations that remained after topological filte
 ### Example 3: Validate ABC framework with known simulated 'observed data' (*synthetic sample*)
 ```bash
 # To validate synthetic sample 1
-python abc_validation.py 1
+python abc_validation.py 0
 ```
 This will:
 
@@ -97,7 +97,7 @@ This will:
 - Save results to:
 result_valid/accepted_samples_sample1_epsilon20_<timestamp>.csv
 
-To validate a different sample, change the task ID argument (e.g., `python abc_validation.py 42` for sample 42- there are 200 samples total (index starting at 0).
+To validate a different sample, change the task ID argument (e.g., `python abc_validation.py 42` for sample 43- there are 200 samples total (index starting at 0).
 
 ## Repository Structure
 ```
@@ -125,6 +125,7 @@ Each script ( `abc_non_dng.py` and `abc_phylo.py`) contains a complete ABC-Rejec
 4. Accepts parameter sets when distance ≤ ε (epsilon- set Euclidean distance at which samples are accepted)
 
 **Key Parameters to Modify**
+
 In `abc_non_dng.py` or `abc_phylo.py`, find the `abc_rejection()` function at the bottom:
 ```python
 if __name__ == "__main__":
@@ -140,6 +141,7 @@ To customise:
 - `epsilon`: Adjust acceptance threshold (lower = stricter, higher = more permissive- can conduct own sensitivity analysis)
 
 **Prior Distributions**
+
 Modify the `sample_prior()` function to change parameter ranges:
 ```python
 def sample_prior():
@@ -149,7 +151,8 @@ def sample_prior():
     return StD, biasVar, input_mut
 ```
 **Running on HPC with SLURM**
-For parrallel execution on computing clusters 
+
+For parallel execution on computing clusters 
 ```bash
 #!/bin/bash
 #SBATCH --job-name=abc_euc
@@ -160,4 +163,86 @@ For parrallel execution on computing clusters
 
 module load Python/3.11.4
 python abc_non_dng.py ${SLURM_ARRAY_TASK_ID}
+```
+### Validation Framework
+
+The validation framework tests the accuracy of MutSimABC on synthetic simulated samples with known 'true' observed mutations.
+
+**Pre-Generated Validation Samples**
+
+`abc_validation_samples_combined.csv` contains 200 pre-generated validation samples with columns:
+- `Sample_ID`: Unique identifier (0-199)
+- `input_mut`: True mutation rate
+- `StD`: True elongation parameter
+- `biasVar`: True branching bias
+- `tree_topology`: Tree architecture code (e.g., "bS4", "ubL8")
+- `Unique_Mutations`: true mutation distribution across branches
+
+**Running Validation**
+
+Single sample:
+```bash
+python abc_validation.py 0  # Runs validation for sample 1
+```
+Batch Validation with SLURM:
+```bash
+#!/bin/bash
+#SBATCH --job-name=abc_valid
+#SBATCH --array=0-199           # Run all 200 validation samples
+#SBATCH --time=00-48:00:00 
+#SBATCH --cpus-per-task=20  
+#SBATCH --mem=100GB
+
+module load Python/3.11.4
+python abc_validation.py ${SLURM_ARRAY_TASK_ID}
+```
+Each validation run continues until 100 accepted samples are collected, ensuring sufficient posterior sampling for HPD interval calculation.
+
+**Analysing Validation Results**
+
+After running the validation, analyse the coverage and accuracy as below:
+```python
+# SET UP
+import pandas as pd
+import glob
+import arviz as az
+
+# LOAD ALL VALID RESULTS
+result_files = glob.glob('result_valid/accepted_samples_sample*_epsilon20_*.csv')
+validation_results = []
+
+for file in result_files:
+    df = pd.read_csv(file)
+    sample_id = int(file.split('sample')[1].split('_')[0])
+    
+    # EXRTRACT TRUE VALUES
+    true_values = pd.read_csv('abc_validation_samples_combined.csv').iloc[sample_id]
+    
+    # CALC 95% HPD INT
+    idata = az.from_dict(posterior={
+        'mu': df['input_mut'].values,
+        'StD': df['StD'].values,
+        'biasVar': df['biasVar'].values
+    })
+    summary = az.summary(idata, hdi_prob=0.95)
+    
+    # CHECK IF TRUE VALUE INSIDE HPD
+    mu_in_hpd = (true_values['input_mut'] >= summary.loc['mu', 'hdi_2.5%']) & \
+                (true_values['input_mut'] <= summary.loc['mu', 'hdi_97.5%'])
+    StD_in_hpd = (true_values['StD'] >= summary.loc['StD', 'hdi_2.5%']) & \
+                 (true_values['StD'] <= summary.loc['StD', 'hdi_97.5%'])
+    biasVar_in_hpd = (true_values['biasVar'] >= summary.loc['biasVar', 'hdi_2.5%']) & \
+                     (true_values['biasVar'] <= summary.loc['biasVar', 'hdi_97.5%'])
+    
+    validation_results.append({
+        'sample_id': sample_id,
+        'mu_in_hpd': mu_in_hpd,
+        'StD_in_hpd': StD_in_hpd,
+        'biasVar_in_hpd': biasVar_in_hpd
+    })
+
+results_df = pd.DataFrame(validation_results) 
+print(f"Coverage: μ={results_df['mu_in_hpd'].mean():.1%}, "
+      f"StD={results_df['StD_in_hpd'].mean():.1%}, "
+      f"σ={results_df['biasVar_in_hpd'].mean():.1%}")
 ```
