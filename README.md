@@ -424,25 +424,6 @@ The tree topology system follows the nomenclature from Tomimoto & Satake (2023),
 
 *Tree topology nomenclature system. (a) Wild P. trichocarpa trees used in Hoffmeister et al. (2020). (b) Branch ages at terminals (black) and junctions (grey). (c) Coding system: right branches (b11-bxx, bb11-bbxx) and left branches (s40-sxx, b41-bxx). Figure adapted from Hoffmeister et al. (2020) and Tomimoto & Satake (2023).*
 
-### Adding a Novel Tree
-Add an entry to `tree_topologies_dict` in any of the ABC scripts as follows:
-```python
-"my_tree": {
-    "numBranch": 4,      # Number of terminal branches
-    "age": 123,          # Root-to-tip distance (years)
-    "s10": 10,           # Trunk before first split
-    
-    # Right side (e.g Tree 14 in figure)
-    "b11": 75,           # Internal branch 1
-    "bb11": 38,          # Terminal from b11
-    "b12": 38,           # Last internal (treated as terminal)
-    
-    # Left side (e.g Tree 13 in figure)
-    "s40": 75,           # Internal branch 1
-    "b41": 38,           # Terminal from s40
-    "s41": 38            # Last internal (treated as terminal)
-}
-```
 **Key Points:**
 
 - Ages represent years (10 cm/year growth assumed)
