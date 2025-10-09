@@ -65,7 +65,7 @@ python -c "import numpy, scipy, pandas, arviz; print('MutSimABC Dependencies Ins
 
 ## Quick Start
 
-### Example 1: Run ABC-Reject inference on E. melliodora pre-DNG data
+### Example 1: Run ABC-Reject inference on *E. melliodora* pre-DNG data
 ```bash
 python abc_non_dng.py
 ```
@@ -76,7 +76,7 @@ This will:
 - Accept parameter sets where simulated mutation distribution is within ε=20 of observed distribution of mutations prior to topological filtering 
 - Save accepted samples to results/accepted_samples_*.csv
 
-### Example 2: Run ABC inference on E. melliodora post-DNG (topologically filtered) data
+### Example 2: Run ABC inference on *E. melliodora* post-DNG (topologically filtered) data
 ```bash
 python abc_phylo.py
 ```
@@ -97,7 +97,7 @@ This will:
 - Save results to:
 result_valid/accepted_samples_sample1_epsilon20_<timestamp>.csv
 
-To validate a different sample, change the task ID argument (e.g., python abc_validation.py 42 for sample 42- there are 200 samples total (index starting at 0).
+To validate a different sample, change the task ID argument (e.g., `python abc_validation.py 42` for sample 42- there are 200 samples total (index starting at 0).
 
 ## Repository Structure
 ```
@@ -114,4 +114,50 @@ MutSimABC/
 ├── results/                      # Output directory for pre-DNG accepted samples
 ├── result_phylo/                 # Output directory for post-DNG accepted samples
 └── result_valid/                 # Output directory for validation accepted samples
+```
+## Usage Guide 
+
+### ABC Inference on Empirical *E. melliodora* Data
+Each script ( `abc_non_dng.py` and `abc_phylo.py`) contains a complete ABC-Reject implementation that:
+1. Samples parameters (μ = mutation rate, StD = meristem elongation stochasticity, σ = bias of branching) from prior distributions
+2. Simulates mutation distributions using Tomimoto & Satake's mechanistic model
+3. Compares simulated vs. observed distributions using Euclidean distance
+4. Accepts parameter sets when distance ≤ ε (epsilon- set Euclidean distance at which samples are accepted)
+
+**Key Parameters to Modify**
+In `abc_non_dng.py` or `abc_phylo.py`, find the `abc_rejection()` function at the bottom:
+```python
+if __name__ == "__main__":
+    num_samples = 5000      # Number of trials
+    epsilon = 20            # Acceptance threshold
+    job_id = os.getenv('SLURM_ARRAY_TASK_ID', 'default_job')
+    batch_id = sys.argv[1] if len(sys.argv) > 1 else 'default_batch'
+    
+    abc_rejection(num_samples, epsilon, job_id, batch_id)
+```
+To customise:
+- `num_samples`: Increase for more thorough posterior sampling (10,000 recommended for final analysis)
+- `epsilon`: Adjust acceptance threshold (lower = stricter, higher = more permissive- can conduct own sensitivity analysis)
+
+**Prior Distributions**
+Modify the `sample_prior()` function to change parameter ranges:
+```python
+def sample_prior():
+    StD = np.random.uniform(1, 5)              # Elongation parameter
+    biasVar = np.random.uniform(0.5, 10)       # Branching bias
+    input_mut = np.random.uniform(1e-11, 9e-9) # Mutation rate per site per year
+    return StD, biasVar, input_mut
+```
+**Running on HPC with SLURM**
+For parrallel execution on computing clusters 
+```bash
+#!/bin/bash
+#SBATCH --job-name=abc_euc
+#SBATCH --array=1-20              # Run 20 parallel jobs
+#SBATCH --time=48:00:00
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=1
+
+module load Python/3.11.4
+python abc_non_dng.py ${SLURM_ARRAY_TASK_ID}
 ```
