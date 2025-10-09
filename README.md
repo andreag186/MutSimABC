@@ -20,9 +20,7 @@ This repository accompanies the paper:
   - [Validation Framework](#validation-framework)
 - [Understanding the Code](#understanding-the-code)
 - [Defining Custom Tree Topologies](#defining-custom-tree-topologies)
-- [Understanding Model Parameters](#understanding-model-parameters)
 - [Computational Requirements](#computational-requirements)
-- [Reproducing Paper Results](#reproducing-paper-results)
 - [Citation](#citation)
 - [Contact](#contact)
 
@@ -319,3 +317,75 @@ These functions simulate meristem dynamics and mutation accumulation:
   - Performs linear regression of genetic vs. physical distance
   - Estimates mutation rate per site per year
   - Returns: variant count, regression equation, mutation rate
+
+## Defining Custom Tree Topologies
+
+<img width="628" height="717" alt="image" src="https://github.com/user-attachments/assets/58009964-f507-47e8-b0bb-89566d2b96dc" />
+
+## Computational Requirements
+
+**Per ABC Run (5,000 trials)**
+
+Runtime: ~6-12 hours 
+Memory: 8-16 GB RAM
+CPU: Single core (parallelizable via SLURM array jobs)
+Storage: ~50-100 MB per accepted sample CSV
+
+**Validation Suite (200 samples)**
+
+Runtime: ~1-2 weeks on HPC cluster with 50 parallel jobs
+Memory: 16 GB per job
+Storage: ~20 GB total for all validation results
+
+**Tested Environments**
+
+- NeSI (New Zealand eScience Infrastructure) - Mahuika cluster
+- Local workstation - Ubuntu 22.04, 32GB RAM, 16-core CPU
+
+## Citation
+
+If you use MutSimABC in your research, please cite:
+```bibtex
+@article{grecu2025mutsimabc,
+  title={MutSimABC: Likelihood-Free Inference of Somatic Mutation Rates Accounting for Meristem Dynamics in Long-Lived Trees},
+  author={Grecu, Andrea Maria and [Co-Authors]},
+  journal={IEEE/ACM Transactions on Computational Biology and Bioinformatics},
+  year={2025},
+  note={In review}
+}
+```
+
+Please also cite the original Tomimoto & Satake (2023) meristem model:
+```bibtex
+@article{Tomimoto_2023,
+title={Modelling somatic mutation accumulation and expansion in a long-lived tree with hierarchical modular architecture},
+volume={565}, ISSN={0022-5193},
+url={http://dx.doi.org/10.1016/j.jtbi.2023.111465},
+DOI={10.1016/j.jtbi.2023.111465},
+journal={Journal of Theoretical Biology},
+publisher={Elsevier BV},
+author={Tomimoto, Sou and Satake, Akiko},
+year={2023},
+month=may,
+pages={111465} }
+```
+
+And the empirical data source:
+```bibtex
+@article{orr2020population,
+  title={A phylogenomic approach reveals a low somatic mutation rate in a long-lived plant},
+  author={Orr, Adam J and Padovan, Amanda and Kainer, David and Külheim, Carsten and Bromham, Lindell and Bustos-Segura, Carlos and Foley, William and Haff, Tonya and Hsieh, Ji-Fan and Morales-Suarez, Alejandro and others},
+  journal={Proceedings of the Royal Society B},
+  volume={287},
+  number={1922},
+  pages={20193364},
+  year={2020},
+  publisher={The Royal Society}
+}
+```
+
+## Contact
+#### **Andrea Maria Grecu**
+University of Auckland
+
+Email: amgstar86@gmail.com
