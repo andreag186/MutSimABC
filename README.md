@@ -17,6 +17,7 @@ This repository accompanies the paper:
 - [Repository Structure](#repository-structure)
 - [Usage Guide](#usage-guide)
   - [ABC Inference on Empirical *E. melliodora* Data](#abc-inference-on-empirical-e-melliodora-data)
+  - [Custom Tree Analysis](#custom-tree-analysis)
   - [Validation Framework](#validation-framework)
 - [Understanding the Code](#understanding-the-code)
 - [Defining Custom Tree Topologies](#defining-custom-tree-topologies)
@@ -105,12 +106,14 @@ MutSimABC/
 │
 ├── abc_non_dng.py                # ABC inference for pre-DNG E. melliodora data
 ├── abc_phylo.py                  # ABC inference for post-DNG E. melliodora data
+├── abc_custom_tree.py            # Template for custom tree analysis
 ├── abc_validation.py             # Validation framework with known ground truth
 │
 ├── abc_validation_samples_combined.csv    # Pre-generated validation samples (169 samples)
 │
 ├── results/                      # Output directory for pre-DNG accepted samples
 ├── result_phylo/                 # Output directory for post-DNG accepted samples
+├── results_my_tree/              # Output directory for custom tree analysis
 └── result_valid/                 # Output directory for validation accepted samples
 ```
 ## Usage Guide 
@@ -162,6 +165,100 @@ For parallel execution on computing clusters
 module load Python/3.11.4
 python abc_non_dng.py ${SLURM_ARRAY_TASK_ID}
 ```
+### Custom Tree Analysis
+To analyze your own tree data, use `abc_custom_tree.py` as a template:
+
+#### Step 1: Define Your Tree Topology
+
+Locate `MODIFY SECTION 1` in `abc_custom_tree.py` and add your tree structure:
+```python
+tree_topologies_dict = {
+    "my_custom_tree": {
+        "numBranch": 6,           # How many terminal branches you sampled
+        "age": 150,               # Maximum root-to-tip distance (years)
+        "s10": 10,                # Trunk before first split
+        
+        # Right side branches (see figure in "Defining Custom Tree Topologies")
+        "b11": 40, "bb11": 25,    # Internal + terminal
+        "b12": 40, "bb12": 25,
+        "b13": 25,                # Last internal = terminal
+        
+        # Left side branches
+        "s40": 40, "b41": 25,
+        "s41": 40, "b42": 25,
+        "s42": 25
+    }
+}
+```
+*See Defining Custom Tree Topologies for detailed nomenclature rules.*
+
+#### Step 2: Set Your Tree in Simulation
+In `MODIFY SECTION 2`, change the tree name:
+```python
+tree_list, tree_dict, numBranch, age = create_tree_list_and_dict(
+    tree_topologies_dict['my_custom_tree']  # ← Use your tree name
+)
+```
+#### Step 3: Add Your Observed Mutation Data
+In MODIFY SECTION 3, replace with your empirical mutation counts per branch:
+```python
+def calculate_distance(unique_mutations):
+    real_distribution = [
+        45.2,    # Unique mutations in branch 1 (bb11)
+        38.7,    # Branch 2 (bb12)
+        52.1,    # Branch 3 (b13)
+        41.5,    # Branch 4 (b41)
+        35.8,    # Branch 5 (b42)
+        48.3     # Branch 6 (s42)
+    ]  # ← YOUR DATA HERE - order must match tree topology
+```
+**Important: Branch order must match the tree structure (right branches first, then left branches).**
+
+### Step 4: Adjust Priors
+Using prior knowledge of expected mutation rates of your long-lived trees, you can change the input_mut prior change. We reccomend a sensitivity analysis. Reffering to the methods/results you may wish to include or remove StD= 0 due to model-jumping effects. Adjust the priors by finding `MODIFY SECTION 4`:
+```python
+def sample_prior():
+    StD = np.random.uniform(1, 5)              # Keep as default
+    biasVar = np.random.uniform(0.5, 10)       # Keep as default
+    input_mut = np.random.uniform(5e-11, 2e-9) # Narrow if you have expectations
+    return StD, biasVar, input_mut
+```
+
+#### Step 5: Run Analysis 
+```python
+python abc_custom_tree.py
+```
+Results will be saved to `results_my_tree/accepted_samples_*.csv`.
+
+#### Step 6: Analyze Posterior
+Use ArviZ to compute summary statistics and visualize the posterior distribution of accepted parameter sets:
+```python
+import pandas as pd
+import arviz as az
+
+# Load accepted samples
+df = pd.read_csv('results_my_tree/accepted_samples_default_job_default_batch_*.csv')
+
+# Create ArviZ inference data object
+idata = az.from_dict(posterior={
+    'mu': df['input_mut'].values,
+    'StD': df['StD'].values,
+    'biasVar': df['biasVar'].values
+})
+
+# Summary statistics with 95% HPD intervals
+print(az.summary(idata, hdi_prob=0.95))
+
+# Plot posteriors
+az.plot_posterior(idata)
+```
+What this does:
+
+- `az.summary()` computes posterior mean, standard deviation, and 95% highest posterior density (HPD) intervals for each parameter. The HPD interval represents the range containing 95% of the posterior probability mass.
+- `az.plot_posterior()` generates histograms showing the posterior distribution shape for each parameter, with HPD intervals marked.
+
+This basic analysis provides point estimates (mean) and uncertainty quantification (HPD intervals) for the mutation rate and developmental parameters. For more advanced diagnostics (effective sample size, convergence checks), see the ArviZ documentation.
+
 ### Validation Framework
 
 The validation framework tests the accuracy of MutSimABC on synthetic simulated samples with known 'true' observed mutations.
@@ -320,10 +417,77 @@ These functions simulate meristem dynamics and mutation accumulation:
 
 ## Defining Custom Tree Topologies
 
-<img width="628" height="717" alt="image" src="https://github.com/user-attachments/assets/58009964-f507-47e8-b0bb-89566d2b96dc" />
+### Understanding the Nomeclature
+The tree topology system follows the nomenclature from Tomimoto & Satake (2023), originally developed for *Populus trichocarpa*.
+
+<img width="450" height="600" alt="image" src="https://github.com/user-attachments/assets/58009964-f507-47e8-b0bb-89566d2b96dc" />
+
+*Tree topology nomenclature system. (a) Wild P. trichocarpa trees used in Hoffmeister et al. (2020). (b) Branch ages at terminals (black) and junctions (grey). (c) Coding system: right branches (b11-bxx, bb11-bbxx) and left branches (s40-sxx, b41-bxx). Figure adapted from Hoffmeister et al. (2020) and Tomimoto & Satake (2023).*
+
+### Adding a Novel Tree
+Add an entry to `tree_topologies_dict` in any of the ABC scripts as follows:
+```python
+"my_tree": {
+    "numBranch": 4,      # Number of terminal branches
+    "age": 123,          # Root-to-tip distance (years)
+    "s10": 10,           # Trunk before first split
+    
+    # Right side (e.g Tree 14 in figure)
+    "b11": 75,           # Internal branch 1
+    "bb11": 38,          # Terminal from b11
+    "b12": 38,           # Last internal (treated as terminal)
+    
+    # Left side (e.g Tree 13 in figure)
+    "s40": 75,           # Internal branch 1
+    "b41": 38,           # Terminal from s40
+    "s41": 38            # Last internal (treated as terminal)
+}
+```
+**Key Points:**
+
+- Ages represent years (10 cm/year growth assumed)
+- Right branches: b11-bxx (internal), bb11-bbxx (terminal)
+- Left branches: s40-sxx (internal), b41-bxx (terminal)
+- Last internal branch without corresponding terminal = treated as terminal
+
+
+### Example: Balanced 4-Branch Tree
+```python
+"bS4": {
+    "numBranch": 4,
+    "age": 123,
+    "s10": 10,
+    "b11": 75, "bb11": 38, "b12": 38,  # Right: 1 internal, 2 terminals
+    "s40": 75, "b41": 38, "s41": 38    # Left: 1 internal, 2 terminals
+}
+#### **(bS4)** Balanced Tree 4 Terminal Branches (terminal branches < internal branches)
+```
+Visual Structure
+```
+          ┌─bb11 (38y)
+    ┌─b11 (75y)
+    │    └─b12 (38y)
+s10 ┤
+(10y)│    ┌─b41 (38y)
+    └─s40 (75y)
+         └─s41 (38y)
+```
+
+To test your tree has been added correctly, run the following code:
+```python
+from abc_custom_tree import create_tree_list_and_dict, tree_topologies_dict
+
+tree_list, tree_dict, numBranch, age = create_tree_list_and_dict(
+    tree_topologies_dict['my_custom_tree']
+)
+
+print(f"Branches: {numBranch}, Max age: {age}")
+print(f"Right: {len(tree_dict['Rt'])} terminals")
+print(f"Left: {len(tree_dict['Lt'])} terminals")
+# Total terminals should equal numBranch
+```
 
 ## Computational Requirements
-
 **Per ABC Run (5,000 trials)**
 
 Runtime: ~6-12 hours 
@@ -385,7 +549,7 @@ And the empirical data source:
 ```
 
 ## Contact
-#### **Andrea Maria Grecu**
-University of Auckland
+### **Andrea Maria Grecu**
+MSc Graduate, University of Auckland
 
 Email: amgstar86@gmail.com
