@@ -16,7 +16,7 @@ This repository accompanies the paper:
 - [Quick Start](#quick-start)
 - [Repository Structure](#repository-structure)
 - [Usage Guide](#usage-guide)
-  - [ABC Inference on Empirical Data](#abc-inference-on-empirical-data)
+  - [ABC Inference on Empirical *E. melliodora* Data](#abc-inference-on-empirical-e-melliodora-data)
   - [Validation Framework](#validation-framework)
 - [Understanding the Code](#understanding-the-code)
 - [Defining Custom Tree Topologies](#defining-custom-tree-topologies)
