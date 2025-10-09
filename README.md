@@ -1,7 +1,7 @@
 # MutSimABC: A Simulation-Based Approximate Bayesian Computational Framework for Mutation Rate Inference in Long-Lived Trees
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 **MutSimABC** is a simulation-based inference framework for estimating somatic mutation rates in long-lived trees using Approximate Bayesian Computation (ABC). The framework explicitly accounts for mechanistic meristem dynamics (elongation and branching processes) that govern mutation accumulation and distribution across tree architectures.
 
@@ -24,7 +24,6 @@ This repository accompanies the paper:
 - [Computational Requirements](#computational-requirements)
 - [Reproducing Paper Results](#reproducing-paper-results)
 - [Citation](#citation)
-- [License](#license)
 - [Contact](#contact)
 
 ---
@@ -82,4 +81,21 @@ Sample 5,000 parameter sets from prior distributions
 python abc_phylo.py
 ```
 Similar to above but uses the 90 mutations that remained after topological filtering.
+
+### Example 3: Validate ABC framework with known ground truth
+```bash
+# To validate synthetic sample 1
+python abc_validation.py 1
+```
+This will:
+
+-Run ABC-Reject validation for sample 1 from abc_validation_samples.csv
+-Sample parameters (StD, biasVar, input_mut) from prior distributions
+-Simulate mutation distributions using the tree topology defined for that sample
+-Compare simulated and observed mutation distributions, accepting parameter sets where the Euclidean distance < ε = 20
+-Continue sampling (up to ~5,000 trials) until 100 accepted samples are obtained
+-Save results to:
+result_valid/accepted_samples_sample1_epsilon20_<timestamp>.csv
+
+To validate a different sample, change the task ID argument (e.g., python abc_validation.py 42 for sample 42- there are 200 samples total(index starting at 0)).
 
