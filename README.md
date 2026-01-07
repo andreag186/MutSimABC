@@ -6,7 +6,13 @@
 **MutSimABC** is a simulation-based inference framework for estimating somatic mutation rates in long-lived trees using Approximate Bayesian Computation (ABC). The framework explicitly accounts for mechanistic meristem dynamics (elongation and branching processes) that govern mutation accumulation and distribution across tree architectures.
 
 This repository accompanies the paper:
-> Grecu, A.M. et al. (2025). "MutSimABC: A Simulation-Based Approximate Bayesian Computational Framework for Mutation Rate Inference in Long-Lived Trees" *IEEE/ACM Transactions on Computational Biology and Bioinformatics* (in review).
+> Grecu, A.M. et al. (2025). "MutSimABC: A Simulation-Based Approximate Bayesian Computational Framework for Mutation Rate Inference in Long-Lived Trees"
+
+Data availability statement: All scripts associated with the MutSimABC framework are provided below and explained in detail
+
+Empirical Data utilized (E melliodora) is available online https://www.ncbi.nlm.nih.gov/bioproject/553104  as published by Orr et al. (2020) 
+
+Funding: This work was supported in part by the start-up funds from the University of Auckland, New Zealand under Grant 4020-12090. (Corresponding author: Allen Rodrigo and Teng Li).
 
 ---
 
